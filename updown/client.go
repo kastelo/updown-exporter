@@ -3,7 +3,7 @@ package updown
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/go-logr/logr"
@@ -51,7 +51,7 @@ func (c *Client) GetChecks() ([]Check, error) {
 		return []Check{}, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Info("Unable to read response body")
 		return []Check{}, err
@@ -101,7 +101,7 @@ func (c *Client) GetCheckMetrics(token string) (Metrics, error) {
 		return Metrics{}, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Info("Unable to read response body")
 		return Metrics{}, err
@@ -113,7 +113,8 @@ func (c *Client) GetCheckMetrics(token string) (Metrics, error) {
 
 	metrics := Metrics{}
 	if err := json.Unmarshal(body, &metrics); err != nil {
-		return Metrics{}, err
+		fmt.Println(string(body))
+		return Metrics{}, fmt.Errorf("unmarshal: %w", err)
 	}
 
 	// log.Info("Result",

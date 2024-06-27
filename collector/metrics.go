@@ -1,7 +1,7 @@
 package collector
 
 import (
-	"strconv"
+	"cmp"
 	"sync"
 
 	"github.com/go-logr/logr"
@@ -26,12 +26,11 @@ func NewMetricsCollector(s System, client *updown.Client, log logr.Logger) *Metr
 		Client: client,
 		Log:    log,
 		ResponseTime: prometheus.NewDesc(
-			prometheus.BuildFQName(s.Namespace, subsystem, "response_times"),
-			"check metrics response times (ms)",
+			prometheus.BuildFQName(s.Namespace, subsystem, "response_time_seconds"),
+			"check metrics response times (seconds)",
 			[]string{
-				"token",
 				"url",
-				"status",
+				"alias",
 			},
 			nil,
 		),
@@ -51,41 +50,33 @@ func (c *MetricsCollector) Collect(ch chan<- prometheus.Metric) {
 
 	var wg sync.WaitGroup
 	for _, check := range checks {
-		wg.Add(1)
-		go func(check updown.Check) {
-			defer wg.Done()
+		log := log.WithValues("URL", check.URL)
 
-			log := log.WithValues("URL", check.URL)
+		if check.Token == "" {
+			log.Info("unable to obtain token for Check")
+			return
+		}
 
-			if check.Token == "" {
-				log.Info("unable to obtain token for Check")
-				return
-			}
+		metrics, err := c.Client.GetCheckMetrics(check.Token)
+		if err != nil {
+			log.Error(err, "unable to read metrics for Check")
+			return
+		}
 
-			metrics, err := c.Client.GetCheckMetrics(check.Token)
-			if err != nil {
-				log.Info("unable to read metrics for Check")
-				return
-			}
-
-			respTime := metrics.Requests.ByResponseTime
-			ch <- prometheus.MustNewConstHistogram(
-				c.ResponseTime,
-				// updown doesn't provide values for above 4s (i.e. Infinity)
-				// website only permits maxium value of 2s so I assume 4s is intended to represent "all else"
-				// Assuming that Under4000 is effectively infinity and using it as the value for count
-				uint64(respTime.Under4000),
-				// updown doesn't provide a value for the sum of values
-				0.0,
-				// Convert the struct into a map of buckets
-				respTime.ToBuckets(),
-				[]string{
-					check.Token,
-					check.URL,
-					strconv.FormatUint(uint64(check.LastStatus), 10),
-				}...,
-			)
-		}(check)
+		respTime := metrics.Requests.ByResponseTime
+		ch <- prometheus.MustNewConstHistogram(
+			c.ResponseTime,
+			// updown doesn't provide values for above 4s (i.e. Infinity)
+			// website only permits maxium value of 2s so I assume 4s is intended to represent "all else"
+			// Assuming that Under4000 is effectively infinity and using it as the value for count
+			uint64(respTime.Under4000),
+			// updown doesn't provide a value for the sum of values
+			0.0,
+			// Convert the struct into a map of buckets
+			respTime.ToBuckets(),
+			check.URL,
+			cmp.Or(check.Alias, check.URL),
+		)
 	}
 	wg.Wait()
 }

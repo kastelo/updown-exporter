@@ -1,8 +1,7 @@
 package collector
 
 import (
-	"strconv"
-	"sync"
+	"cmp"
 
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
@@ -26,13 +25,11 @@ func NewChecksCollector(s System, client *updown.Client, log logr.Logger) *Check
 		Client: client,
 		Log:    log,
 		Enabled: prometheus.NewDesc(
-			prometheus.BuildFQName(s.Namespace, subsystem, "enabled"),
-			"status of check (enabled=1)",
+			prometheus.BuildFQName(s.Namespace, subsystem, "up"),
+			"status of check",
 			[]string{
-				"token",
 				"url",
-				"status",
-				"ssl_valid",
+				"alias",
 			},
 			nil,
 		),
@@ -49,30 +46,22 @@ func (c *ChecksCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	var wg sync.WaitGroup
 	for _, check := range checks {
-		wg.Add(1)
-		go func(check updown.Check) {
-			defer wg.Done()
-			ch <- prometheus.MustNewConstMetric(
-				c.Enabled,
-				prometheus.CounterValue,
-				func(enabled bool) (result float64) {
-					if enabled {
-						result = 1.0
-					}
-					return result
-				}(check.Enabled),
-				[]string{
-					check.Token,
-					check.URL,
-					strconv.FormatUint(uint64(check.LastStatus), 10),
-					strconv.FormatBool(check.SSL.Valid),
-				}...,
-			)
-		}(check)
+		ch <- prometheus.MustNewConstMetric(
+			c.Enabled,
+			prometheus.CounterValue,
+			boolFloat(!check.Down),
+			check.URL,
+			cmp.Or(check.Alias, check.URL),
+		)
 	}
-	wg.Wait()
+}
+
+func boolFloat(enabled bool) float64 {
+	if enabled {
+		return 1.0
+	}
+	return 0.0
 }
 
 // Describe implements Prometheus' Collector interface is used to describe metrics
