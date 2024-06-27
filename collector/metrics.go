@@ -4,9 +4,10 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/DazWilkin/updown-exporter/updown"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"kastelo.dev/updown-exporter/updown"
 )
 
 // MetricsCollector is a type that represents updown Check Metrics

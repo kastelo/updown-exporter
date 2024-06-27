@@ -11,13 +11,12 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/DazWilkin/updown-exporter/collector"
-	"github.com/DazWilkin/updown-exporter/updown"
-
 	"github.com/go-logr/stdr"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"kastelo.dev/updown-exporter/collector"
+	"kastelo.dev/updown-exporter/updown"
 )
 
 const (
@@ -25,6 +24,7 @@ const (
 	subsystem string = "exporter"
 	version   string = "v0.0.1"
 )
+
 const (
 	rootTemplate string = `
 {{- define "content" }}
@@ -61,13 +61,13 @@ var (
 	// StartTime is the start time of the exporter represented as a UNIX epoch
 	StartTime = time.Now().Unix()
 )
+
 var (
 	endpoint    = flag.String("endpoint", "0.0.0.0:8080", "The endpoint of the HTTP server")
 	metricsPath = flag.String("path", "/metrics", "The path on which Prometheus metrics will be served")
 )
-var (
-	name string = fmt.Sprintf("%s_%s", namespace, subsystem)
-)
+
+var name string = fmt.Sprintf("%s_%s", namespace, subsystem)
 
 type Content struct {
 	MetricsPath string
@@ -77,6 +77,7 @@ func handleHealthz(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
+
 func handleRoot(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	t := template.Must(template.New("content").Parse(rootTemplate))
