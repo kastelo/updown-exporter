@@ -1,0 +1,10 @@
+builds:
+- id: updown-exporter
+  main: .
+  ldflags:
+  - -s -w
+  - -extldflags "-static"
+
+defaultPlatforms:
+- linux/arm64
+- linux/amd64
