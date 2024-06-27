@@ -1,9 +1,5 @@
 # Prometheus Exporter for [updown.io](https://updown.io)
 
-[![build-containers](https://github.com/DazWilkin/updown-exporter/actions/workflows/build.yml/badge.svg)](https://github.com/DazWilkin/updown-exporter/actions/workflows/build.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/DazWilkin/updown-exporter.svg)](https://pkg.go.dev/github.com/DazWilkin/updown-exporter)
-[![Go Report Card](https://goreportcard.com/badge/github.com/dazwilkin/updown-exporter)](https://goreportcard.com/report/github.com/dazwilkin/updown-exporter)
-
 ## Metrics
 
 Metrics names are prefixed `updown_`.
@@ -16,7 +12,7 @@ Metrics names are prefixed `updown_`.
 
 ## Image
 
-`ghcr.io/dazwilkin/updown-exporter:ba2bfa2242aea745c876ef36c6d38f75f1a94709`
+`ghcr.io/kastelo/updown-exporter:latest`
 
 ## API Key
 
@@ -41,7 +37,7 @@ go run . \
 ```bash
 API_KEY="[YOUR-API-KEY]"
 
-IMAGE="ghcr.io/dazwilkin/updown-exporter:ba2bfa2242aea745c876ef36c6d38f75f1a94709"
+IMAGE="ghcr.io/kastelo/updown-exporter:latest"
 
 podman run \
 --interactive --tty --rm \
@@ -75,7 +71,7 @@ scrape_configs:
 ```bash
 API_KEY="[YOUR-API-KEY]"
 
-IMAGE="ghcr.io/dazwilkin/updown-exporter:ba2bfa2242aea745c876ef36c6d38f75f1a94709"
+IMAGE="ghcr.io/kastelo/updown-exporter:latest"
 
 docker run \
 --detach --tty --rm \
@@ -106,7 +102,7 @@ Then browse:
 ```bash
 API_KEY="[YOUR-API-KEY]"
 
-IMAGE="ghcr.io/dazwilkin/updown-exporter:ba2bfa2242aea745c876ef36c6d38f75f1a94709"
+IMAGE="ghcr.io/kastelo/updown-exporter:latest"
 
 POD="updown-exporter"
 
@@ -138,29 +134,6 @@ Then browse:
 
 + [Exporter](http://localhost:8080/metrics)
 + [Prometheus](http://localhost:9090/targets)
-
-## Raspberry Pi
-
-```bash
-if [ "$(getconf LONG_BIT)" -eq 64 ]
-then
-  # 64-bit Raspian
-  ARCH="GOARCH=arm64"
-  TAG="arm64"
-else
-  # 32-bit Raspian
-  ARCH="GOARCH=arm GOARM=7"
-  TAG="arm32v7"
-fi
-
-podman build \
---build-arg=GOLANG_OPTIONS="CGO_ENABLED=0 GOOS=linux ${ARCH}" \
---build-arg=COMMIT=$(git rev-parse HEAD) \
---build-arg=VERSION=$(uname --kernel-release) \
---tag=ghcr.io/dazwilkin/updown-exporter:${TAG} \
---file=./Dockerfile \
-.
-```
 
 <hr/>
 <br/>
