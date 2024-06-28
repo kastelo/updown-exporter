@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"html/template"
 	"log"
 	stdlog "log"
@@ -65,9 +64,8 @@ var (
 var (
 	endpoint    = flag.String("endpoint", "0.0.0.0:8080", "The endpoint of the HTTP server")
 	metricsPath = flag.String("path", "/metrics", "The path on which Prometheus metrics will be served")
+	urlFilter   = flag.String("url-filter", "", "Regexp to filter URLs in checks")
 )
-
-var name string = fmt.Sprintf("%s_%s", namespace, subsystem)
 
 type Content struct {
 	MetricsPath string
@@ -110,7 +108,7 @@ func main() {
 	}
 
 	// Objects that holds GCP-specific resources (e.g. projects)
-	client := updown.NewClient(key, log)
+	client := updown.NewClient(key, *urlFilter, log)
 
 	registry := prometheus.NewRegistry()
 

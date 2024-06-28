@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/go-logr/logr"
 )
@@ -15,17 +16,19 @@ const (
 
 // Client is a type that represents an updown (REST) client
 type Client struct {
-	APIKey string
-	Client *http.Client
-	Log    logr.Logger
+	APIKey    string
+	URLFilter string
+	Client    *http.Client
+	Log       logr.Logger
 }
 
 // NewClient is a function that returns a new Client
-func NewClient(apiKey string, log logr.Logger) *Client {
+func NewClient(apiKey, urlFilter string, log logr.Logger) *Client {
 	return &Client{
-		APIKey: apiKey,
-		Client: &http.Client{},
-		Log:    log,
+		APIKey:    apiKey,
+		URLFilter: urlFilter,
+		Client:    &http.Client{},
+		Log:       log,
 	}
 }
 
@@ -69,6 +72,16 @@ func (c *Client) GetChecks() ([]Check, error) {
 	// log.Info("Result",
 	// 	"checks", checks,
 	// )
+
+	if c.URLFilter != "" {
+		filtered := checks[:0]
+		for _, check := range checks {
+			if strings.Contains(check.URL, c.URLFilter) {
+				filtered = append(filtered, check)
+			}
+		}
+		checks = filtered
+	}
 
 	return checks, nil
 }

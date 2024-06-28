@@ -18,7 +18,7 @@ func TestGetChecks(t *testing.T) {
 		t.Fatal("expected environment to contain API_KEY")
 	}
 
-	client := NewClient(apiKey, log)
+	client := NewClient(apiKey, "", log)
 	_, err := client.GetChecks()
 	if err != nil {
 		t.Fatal("expected to be able to get Checks")
@@ -35,7 +35,7 @@ func TestGetCheckMetrics(t *testing.T) {
 		t.Fatal("expected environment to contain API_KEY")
 	}
 
-	client := NewClient(apiKey, log)
+	client := NewClient(apiKey, "", log)
 
 	// Need some Check token to make Metrics requests
 	checks, err := client.GetChecks()
