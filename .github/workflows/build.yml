@@ -5,7 +5,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -20,6 +20,10 @@ jobs:
         with:
           go-version: stable
 
+      - uses: go-semantic-release/action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: ko-build/setup-ko@v0.6
 
       - name: Log in to GHCR
@@ -30,6 +34,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
-          ko build --sbom=none --bare .
+          git fetch --tags
+          descr=$(git describe --tags)
+          short=$(git describe --tags --abbrev=0)
+          export version="${descr#v}"
+          if [[ $descr == $short ]]; then
+            minor="${version#*.}"
+            major="${version%%.*}"
+            ko build --bare --sbom=none -t edge -t latest -t "$version" -t "$minor" -t "$major" .
+          else
+            ko build --bare --sbom=none -t edge .
+          fi
         env:
           KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
